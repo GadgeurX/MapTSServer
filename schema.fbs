@@ -1,0 +1,14 @@
+namespace packet;
+
+table LoginPacket {
+    login: string;
+    password: string;
+}
+
+union PacketType { LoginPacket }
+
+table Packet {
+    data: PacketType;
+}
+
+root_type Packet;
