@@ -12,7 +12,7 @@ use crate::packet_processor::PacketProcessor;
 mod client;
 
 pub struct Server {
-    clients: Arc<Mutex<Vec<Box<Client>>>>,
+    pub clients: Arc<Mutex<Vec<Box<Client>>>>,
 }
 
 impl Server {
@@ -29,6 +29,32 @@ impl Server {
 
     pub fn run(&self, packet_processor: Arc<PacketProcessor>, game_rx: Receiver<PacketTransfer>, server_tx: Sender<PacketTransfer>) -> JoinHandle<()> {
         let clients = self.clients.clone();
+        let clients_bridge = self.clients.clone();
+        thread::spawn(move || {
+            while match game_rx.recv() {
+                Ok(packet_transfer) => {
+                    match clients_bridge.lock().unwrap().iter().find(|client| {
+                        match client.player_id.lock().unwrap().as_mut() {
+                            Some(player_id) => {
+                                if *player_id == packet_transfer.player_id {
+                                    true
+                                } else { false }
+                            }
+                            None => { false }
+                        }
+                    }) {
+                        Some(client) => {
+                            client.send(&packet_transfer.buffer);
+                        }
+                        None => {}
+                    }
+                    true
+                }
+                Err(_) => {
+                    false
+                }
+            } {}
+        });
         return thread::spawn(
             move || {
                 info!("Starting Server");

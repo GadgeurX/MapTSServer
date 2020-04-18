@@ -2,16 +2,19 @@ use std::net::{TcpStream, Shutdown};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::io::prelude::*;
-use crate::schema_generated::packet::{get_root_as_packet, Packet};
+use crate::schema_generated::packet::{get_root_as_packet, Packet, OkPacketArgs, PacketArgs, PacketType, finish_packet_buffer, OkPacketOffset, OkPacketBuilder};
 use crate::packet_transfer::PacketTransfer;
 use crate::packet_processor::PacketProcessor;
 use std::sync::mpsc::Sender;
+use flatbuffers::FlatBufferBuilder;
+use crate::schema_generated::packet::PacketType::OkPacket;
+use crate::schema_generated::packet;
 
 pub struct Client {
-    stream: Arc<Mutex<Box<TcpStream>>>,
-    buffer: Arc<Mutex<Vec<u8>>>,
-    player_id: Arc<Mutex<Option<u32>>>,
-    packet_processor: Arc<Mutex<Arc<PacketProcessor>>>
+    pub stream: Arc<Mutex<Box<TcpStream>>>,
+    pub buffer: Arc<Mutex<Vec<u8>>>,
+    pub player_id: Arc<Mutex<Option<u32>>>,
+    pub packet_processor: Arc<Mutex<Arc<PacketProcessor>>>
 }
 
 impl Client {
@@ -62,7 +65,17 @@ impl Client {
                             match packet_processor.lock().unwrap().check_login_packet(&packet_transfer.buffer) {
                                 Some(player) => {
                                     player_id.lock().unwrap().replace(player);
-                                    // Send ok
+                                    let mut bldr = FlatBufferBuilder::new();
+                                    let mut bytes: Vec<u8> = Vec::new();
+                                    let ok_packet = packet::OkPacket::create(&mut bldr, &OkPacketArgs{});
+                                    let packet = Packet::create(&mut bldr, &PacketArgs {
+                                        data_type: PacketType::OkPacket,
+                                        data: Some(ok_packet.as_union_value())
+                                    });
+                                    finish_packet_buffer(&mut bldr, packet);
+                                    let finished_data = bldr.finished_data();
+                                    bytes.extend_from_slice(finished_data);
+                                    stream.lock().unwrap().as_mut().write(&bytes);
                                 }
                                 None => {
                                     server_tx.send(packet_transfer);
@@ -71,7 +84,6 @@ impl Client {
                         }
                         None => {}
                     }
-
                     true
                 }
                 Err(_) => {
@@ -83,7 +95,8 @@ impl Client {
         });
     }
 
-    pub fn send(&self) {
-        thread::spawn(move || {});
+    pub fn send(&self, buffer: &[u8]) {
+        let stream = self.stream.clone();
+        stream.lock().unwrap().as_mut().write(buffer);
     }
 }
