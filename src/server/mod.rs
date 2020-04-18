@@ -19,7 +19,9 @@ impl Server {
     }
 
     fn handle_new_client(mut stream: TcpStream, clients: &mut Vec<Box<Client>>) {
-        clients.push(Box::new(Client::new(stream)))
+        let client = Box::new(Client::new(stream));
+        client.run();
+        clients.push(client)
     }
 
     pub fn run(&self) -> JoinHandle<()> {

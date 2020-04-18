@@ -6,6 +6,7 @@ use crate::schema_generated::packet::{get_root_as_packet, Packet};
 pub struct Client {
     stream: Arc<Mutex<Box<TcpStream>>>,
     buffer: Arc<Mutex<Vec<u8>>>,
+
 }
 
 impl Client {
@@ -21,9 +22,11 @@ impl Client {
             Some(position) => {
                 match buffer.get(position + 1) {
                     Some(value) => {
-                        if value == 0xFE {
+                        if value == 0xFEu8 {
                             let data_packet = &buffer[0..position];
-                            return Some(get_root_as_packet(data_packet))
+                            let packet = Some(get_root_as_packet(data_packet));
+                            buffer.drain(0..=position + 1);
+                            return packet
                         }
                     }
                     None => {}
