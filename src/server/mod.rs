@@ -5,11 +5,14 @@ use std::io::{Read, Write};
 use crate::schema_generated::packet::get_root_as_packet;
 use std::sync::{Arc, Mutex};
 use crate::server::client::Client;
+use std::sync::mpsc::{Sender, Receiver};
+use crate::packet_transfer::PacketTransfer;
+use crate::packet_processor::PacketProcessor;
 
 mod client;
 
 pub struct Server {
-    clients: Arc<Mutex<Vec<Box<Client>>>>
+    clients: Arc<Mutex<Vec<Box<Client>>>>,
 }
 
 impl Server {
@@ -18,13 +21,13 @@ impl Server {
         return Server { clients: Arc::new(Mutex::new(vec![])) };
     }
 
-    fn handle_new_client(mut stream: TcpStream, clients: &mut Vec<Box<Client>>) {
-        let client = Box::new(Client::new(stream));
-        client.run();
+    fn handle_new_client(packet_processor: Arc<PacketProcessor>, stream: TcpStream, clients: &mut Vec<Box<Client>>, server_tx: Sender<PacketTransfer>) {
+        let client = Box::new(Client::new(stream, packet_processor));
+        client.run(server_tx);
         clients.push(client)
     }
 
-    pub fn run(&self) -> JoinHandle<()> {
+    pub fn run(&self, packet_processor: Arc<PacketProcessor>, game_rx: Receiver<PacketTransfer>, server_tx: Sender<PacketTransfer>) -> JoinHandle<()> {
         let clients = self.clients.clone();
         return thread::spawn(
             move || {
@@ -36,7 +39,7 @@ impl Server {
                         match stream {
                             Ok(stream) => {
                                 info!("New connection: {}", stream.peer_addr().unwrap());
-                                Server::handle_new_client(stream, clients.lock().unwrap().as_mut())
+                                Server::handle_new_client(packet_processor.clone(), stream, clients.lock().unwrap().as_mut(), server_tx.clone())
                             }
                             Err(e) => {
                                 error!("Error: {}", e);

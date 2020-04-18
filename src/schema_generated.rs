@@ -18,16 +18,145 @@ pub mod packet {
   use self::flatbuffers::EndianScalar;
 
 #[allow(non_camel_case_types)]
+#[repr(i16)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ActionType {
+  DEFAULT = 0,
+  MOVE = 1,
+  ATTACK = 2,
+
+}
+
+pub const ENUM_MIN_ACTION_TYPE: i16 = 0;
+pub const ENUM_MAX_ACTION_TYPE: i16 = 2;
+
+impl<'a> flatbuffers::Follow<'a> for ActionType {
+  type Inner = Self;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::read_scalar_at::<Self>(buf, loc)
+  }
+}
+
+impl flatbuffers::EndianScalar for ActionType {
+  #[inline]
+  fn to_little_endian(self) -> Self {
+    let n = i16::to_le(self as i16);
+    let p = &n as *const i16 as *const ActionType;
+    unsafe { *p }
+  }
+  #[inline]
+  fn from_little_endian(self) -> Self {
+    let n = i16::from_le(self as i16);
+    let p = &n as *const i16 as *const ActionType;
+    unsafe { *p }
+  }
+}
+
+impl flatbuffers::Push for ActionType {
+    type Output = ActionType;
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        flatbuffers::emplace_scalar::<ActionType>(dst, *self);
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_ACTION_TYPE:[ActionType; 3] = [
+  ActionType::DEFAULT,
+  ActionType::MOVE,
+  ActionType::ATTACK
+];
+
+#[allow(non_camel_case_types)]
+pub const ENUM_NAMES_ACTION_TYPE:[&'static str; 3] = [
+    "DEFAULT",
+    "MOVE",
+    "ATTACK"
+];
+
+pub fn enum_name_action_type(e: ActionType) -> &'static str {
+  let index = e as i16;
+  ENUM_NAMES_ACTION_TYPE[index as usize]
+}
+
+#[allow(non_camel_case_types)]
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum Target {
+  NONE = 0,
+  EntityId = 1,
+  Position = 2,
+
+}
+
+pub const ENUM_MIN_TARGET: u8 = 0;
+pub const ENUM_MAX_TARGET: u8 = 2;
+
+impl<'a> flatbuffers::Follow<'a> for Target {
+  type Inner = Self;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::read_scalar_at::<Self>(buf, loc)
+  }
+}
+
+impl flatbuffers::EndianScalar for Target {
+  #[inline]
+  fn to_little_endian(self) -> Self {
+    let n = u8::to_le(self as u8);
+    let p = &n as *const u8 as *const Target;
+    unsafe { *p }
+  }
+  #[inline]
+  fn from_little_endian(self) -> Self {
+    let n = u8::from_le(self as u8);
+    let p = &n as *const u8 as *const Target;
+    unsafe { *p }
+  }
+}
+
+impl flatbuffers::Push for Target {
+    type Output = Target;
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        flatbuffers::emplace_scalar::<Target>(dst, *self);
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_TARGET:[Target; 3] = [
+  Target::NONE,
+  Target::EntityId,
+  Target::Position
+];
+
+#[allow(non_camel_case_types)]
+pub const ENUM_NAMES_TARGET:[&'static str; 3] = [
+    "NONE",
+    "EntityId",
+    "Position"
+];
+
+pub fn enum_name_target(e: Target) -> &'static str {
+  let index = e as u8;
+  ENUM_NAMES_TARGET[index as usize]
+}
+
+pub struct TargetUnionTableOffset {}
+#[allow(non_camel_case_types)]
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum PacketType {
   NONE = 0,
   LoginPacket = 1,
+  ActionPacket = 2,
+  OkPacket = 3,
 
 }
 
 pub const ENUM_MIN_PACKET_TYPE: u8 = 0;
-pub const ENUM_MAX_PACKET_TYPE: u8 = 1;
+pub const ENUM_MAX_PACKET_TYPE: u8 = 3;
 
 impl<'a> flatbuffers::Follow<'a> for PacketType {
   type Inner = Self;
@@ -61,15 +190,19 @@ impl flatbuffers::Push for PacketType {
 }
 
 #[allow(non_camel_case_types)]
-pub const ENUM_VALUES_PACKET_TYPE:[PacketType; 2] = [
+pub const ENUM_VALUES_PACKET_TYPE:[PacketType; 4] = [
   PacketType::NONE,
-  PacketType::LoginPacket
+  PacketType::LoginPacket,
+  PacketType::ActionPacket,
+  PacketType::OkPacket
 ];
 
 #[allow(non_camel_case_types)]
-pub const ENUM_NAMES_PACKET_TYPE:[&'static str; 2] = [
+pub const ENUM_NAMES_PACKET_TYPE:[&'static str; 4] = [
     "NONE",
-    "LoginPacket"
+    "LoginPacket",
+    "ActionPacket",
+    "OkPacket"
 ];
 
 pub fn enum_name_packet_type(e: PacketType) -> &'static str {
@@ -78,6 +211,289 @@ pub fn enum_name_packet_type(e: PacketType) -> &'static str {
 }
 
 pub struct PacketTypeUnionTableOffset {}
+pub enum EntityIdOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct EntityId<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for EntityId<'a> {
+    type Inner = EntityId<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> EntityId<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        EntityId {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args EntityIdArgs) -> flatbuffers::WIPOffset<EntityId<'bldr>> {
+      let mut builder = EntityIdBuilder::new(_fbb);
+      builder.add_id(args.id);
+      builder.finish()
+    }
+
+    pub const VT_ID: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub fn id(&self) -> u32 {
+    self._tab.get::<u32>(EntityId::VT_ID, Some(0)).unwrap()
+  }
+}
+
+pub struct EntityIdArgs {
+    pub id: u32,
+}
+impl<'a> Default for EntityIdArgs {
+    #[inline]
+    fn default() -> Self {
+        EntityIdArgs {
+            id: 0,
+        }
+    }
+}
+pub struct EntityIdBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> EntityIdBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_id(&mut self, id: u32) {
+    self.fbb_.push_slot::<u32>(EntityId::VT_ID, id, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> EntityIdBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    EntityIdBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<EntityId<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+pub enum ActionPacketOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct ActionPacket<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ActionPacket<'a> {
+    type Inner = ActionPacket<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> ActionPacket<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        ActionPacket {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args ActionPacketArgs<'args>) -> flatbuffers::WIPOffset<ActionPacket<'bldr>> {
+      let mut builder = ActionPacketBuilder::new(_fbb);
+      if let Some(x) = args.password { builder.add_password(x); }
+      if let Some(x) = args.target { builder.add_target(x); }
+      if let Some(x) = args.entityIds { builder.add_entityIds(x); }
+      builder.add_action(args.action);
+      builder.add_target_type(args.target_type);
+      builder.finish()
+    }
+
+    pub const VT_ENTITYIDS: flatbuffers::VOffsetT = 4;
+    pub const VT_ACTION: flatbuffers::VOffsetT = 6;
+    pub const VT_TARGET_TYPE: flatbuffers::VOffsetT = 8;
+    pub const VT_TARGET: flatbuffers::VOffsetT = 10;
+    pub const VT_PASSWORD: flatbuffers::VOffsetT = 12;
+
+  #[inline]
+  pub fn entityIds(&self) -> Option<flatbuffers::Vector<'a, flatbuffers::ForwardsUOffset<EntityId<'a>>>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<flatbuffers::ForwardsUOffset<EntityId<'a>>>>>(ActionPacket::VT_ENTITYIDS, None)
+  }
+  #[inline]
+  pub fn action(&self) -> ActionType {
+    self._tab.get::<ActionType>(ActionPacket::VT_ACTION, Some(ActionType::DEFAULT)).unwrap()
+  }
+  #[inline]
+  pub fn target_type(&self) -> Target {
+    self._tab.get::<Target>(ActionPacket::VT_TARGET_TYPE, Some(Target::NONE)).unwrap()
+  }
+  #[inline]
+  pub fn target(&self) -> Option<flatbuffers::Table<'a>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Table<'a>>>(ActionPacket::VT_TARGET, None)
+  }
+  #[inline]
+  pub fn password(&self) -> Option<&'a str> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<&str>>(ActionPacket::VT_PASSWORD, None)
+  }
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn target_as_entity_id(&self) -> Option<EntityId<'a>> {
+    if self.target_type() == Target::EntityId {
+      self.target().map(|u| EntityId::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn target_as_position(&self) -> Option<Position<'a>> {
+    if self.target_type() == Target::Position {
+      self.target().map(|u| Position::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+}
+
+pub struct ActionPacketArgs<'a> {
+    pub entityIds: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a , flatbuffers::ForwardsUOffset<EntityId<'a >>>>>,
+    pub action: ActionType,
+    pub target_type: Target,
+    pub target: Option<flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>>,
+    pub password: Option<flatbuffers::WIPOffset<&'a  str>>,
+}
+impl<'a> Default for ActionPacketArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        ActionPacketArgs {
+            entityIds: None,
+            action: ActionType::DEFAULT,
+            target_type: Target::NONE,
+            target: None,
+            password: None,
+        }
+    }
+}
+pub struct ActionPacketBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ActionPacketBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_entityIds(&mut self, entityIds: flatbuffers::WIPOffset<flatbuffers::Vector<'b , flatbuffers::ForwardsUOffset<EntityId<'b >>>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ActionPacket::VT_ENTITYIDS, entityIds);
+  }
+  #[inline]
+  pub fn add_action(&mut self, action: ActionType) {
+    self.fbb_.push_slot::<ActionType>(ActionPacket::VT_ACTION, action, ActionType::DEFAULT);
+  }
+  #[inline]
+  pub fn add_target_type(&mut self, target_type: Target) {
+    self.fbb_.push_slot::<Target>(ActionPacket::VT_TARGET_TYPE, target_type, Target::NONE);
+  }
+  #[inline]
+  pub fn add_target(&mut self, target: flatbuffers::WIPOffset<flatbuffers::UnionWIPOffset>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ActionPacket::VT_TARGET, target);
+  }
+  #[inline]
+  pub fn add_password(&mut self, password: flatbuffers::WIPOffset<&'b  str>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ActionPacket::VT_PASSWORD, password);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ActionPacketBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ActionPacketBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ActionPacket<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+pub enum OkPacketOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct OkPacket<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for OkPacket<'a> {
+    type Inner = OkPacket<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> OkPacket<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        OkPacket {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        _args: &'args OkPacketArgs) -> flatbuffers::WIPOffset<OkPacket<'bldr>> {
+      let mut builder = OkPacketBuilder::new(_fbb);
+      builder.finish()
+    }
+
+}
+
+pub struct OkPacketArgs {
+}
+impl<'a> Default for OkPacketArgs {
+    #[inline]
+    fn default() -> Self {
+        OkPacketArgs {
+        }
+    }
+}
+pub struct OkPacketBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> OkPacketBuilder<'a, 'b> {
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> OkPacketBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    OkPacketBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<OkPacket<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
 pub enum LoginPacketOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
@@ -166,6 +582,94 @@ impl<'a: 'b, 'b> LoginPacketBuilder<'a, 'b> {
   }
 }
 
+pub enum PositionOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct Position<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for Position<'a> {
+    type Inner = Position<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> Position<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        Position {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args PositionArgs) -> flatbuffers::WIPOffset<Position<'bldr>> {
+      let mut builder = PositionBuilder::new(_fbb);
+      builder.add_y(args.y);
+      builder.add_x(args.x);
+      builder.finish()
+    }
+
+    pub const VT_X: flatbuffers::VOffsetT = 4;
+    pub const VT_Y: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub fn x(&self) -> i32 {
+    self._tab.get::<i32>(Position::VT_X, Some(0)).unwrap()
+  }
+  #[inline]
+  pub fn y(&self) -> i32 {
+    self._tab.get::<i32>(Position::VT_Y, Some(0)).unwrap()
+  }
+}
+
+pub struct PositionArgs {
+    pub x: i32,
+    pub y: i32,
+}
+impl<'a> Default for PositionArgs {
+    #[inline]
+    fn default() -> Self {
+        PositionArgs {
+            x: 0,
+            y: 0,
+        }
+    }
+}
+pub struct PositionBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> PositionBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_x(&mut self, x: i32) {
+    self.fbb_.push_slot::<i32>(Position::VT_X, x, 0);
+  }
+  #[inline]
+  pub fn add_y(&mut self, y: i32) {
+    self.fbb_.push_slot::<i32>(Position::VT_Y, y, 0);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> PositionBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    PositionBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<Position<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
 pub enum PacketOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
@@ -216,6 +720,26 @@ impl<'a> Packet<'a> {
   pub fn data_as_login_packet(&self) -> Option<LoginPacket<'a>> {
     if self.data_type() == PacketType::LoginPacket {
       self.data().map(|u| LoginPacket::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_action_packet(&self) -> Option<ActionPacket<'a>> {
+    if self.data_type() == PacketType::ActionPacket {
+      self.data().map(|u| ActionPacket::init_from_table(u))
+    } else {
+      None
+    }
+  }
+
+  #[inline]
+  #[allow(non_snake_case)]
+  pub fn data_as_ok_packet(&self) -> Option<OkPacket<'a>> {
+    if self.data_type() == PacketType::OkPacket {
+      self.data().map(|u| OkPacket::init_from_table(u))
     } else {
       None
     }

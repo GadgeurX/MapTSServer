@@ -1,16 +1,18 @@
 use std::thread;
 use std::time::Duration;
 use std::time::SystemTime;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{Arc, Mutex, mpsc};
 use std::thread::JoinHandle;
 use crate::game::entity::unit::worker::Worker;
+use std::sync::mpsc::{Receiver, Sender};
+use crate::packet_transfer::PacketTransfer;
 
 mod player;
 mod entity;
 
 pub struct Game {
-    players: Arc<Mutex<Vec<player::Player>>>,
-    entities: Arc<Mutex<Vec<Box<dyn entity::Entity + Send>>>>,
+    pub players: Arc<Mutex<Vec<player::Player>>>,
+    pub entities: Arc<Mutex<Vec<Box<dyn entity::Entity + Send>>>>,
 }
 
 impl Game {
@@ -22,7 +24,7 @@ impl Game {
         };
     }
 
-    pub fn run(&self) -> JoinHandle<()>{
+    pub fn run(&self, server_tx: Sender<PacketTransfer>) -> JoinHandle<()>{
         let entities = self.entities.clone();
         return thread::spawn(move || {
             info!("Starting Game");

@@ -1,11 +1,31 @@
 namespace packet;
 
+enum ActionType: short { DEFAULT, MOVE, ATTACK }
+table EntityId { id: uint; }
+union Target { EntityId, Position }
+
+table ActionPacket {
+    entityIds: [EntityId];
+    action: ActionType;
+    target: Target;
+    password: string;
+}
+
+table OkPacket {
+}
+
 table LoginPacket {
     login: string;
     password: string;
 }
 
-union PacketType { LoginPacket }
+table Position {
+    x: int;
+    y:int;
+}
+
+
+union PacketType { LoginPacket, ActionPacket, OkPacket }
 
 table Packet {
     data: PacketType;
